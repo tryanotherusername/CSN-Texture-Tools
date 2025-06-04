@@ -5,6 +5,8 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using BCnEncoder.Decoder;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
+using System.Runtime.InteropServices;
 
 public class DDSHeaderInfo
 {
@@ -131,7 +133,19 @@ public class DDSDecoderHelper
             int width = decoded.Width;
             int height = decoded.Height;
             byte[] pixelData = decoded.data; // returns RGBA byte array
+            for (int i = 0; i < pixelData.Length; i += 4)
+            {
+                byte r = pixelData[i];
+                byte g = pixelData[i + 1];
+                byte b = pixelData[i + 2];
+                // byte a = pixelData[i + 3]; // alpha remains unchanged
 
+                // Swap R and B
+                pixelData[i] = b;
+                pixelData[i + 1] = g;
+                pixelData[i + 2] = r;
+                // pixelData[i + 3] = a; // alpha remains unchanged
+            }
             var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
             var bmpData = bitmap.LockBits(
                 new Rectangle(0, 0, width, height),

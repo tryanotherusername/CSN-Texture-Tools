@@ -157,7 +157,7 @@ namespace HLTools
                     int height = headerInfo.Height;
 
                     int dataSize = ((width + 3) / 4) * ((height + 3) / 4) * DXT5DataSize;
-
+                    
                     binReader.BaseStream.Seek(-DDSHeaderSize, SeekOrigin.Current);
 
                     byte[] imageData = binReader.ReadBytes(DDSHeaderSize + dataSize);
