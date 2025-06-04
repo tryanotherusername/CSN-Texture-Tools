@@ -114,14 +114,14 @@ public static class DDSHeaderParser
     }
 }
 
-public class DdsDecoderHelper
+public class DDSDecoderHelper
 {
     /// <summary>
     /// Decodes a DDS file from a byte array into a System.Drawing.Bitmap.
     /// </summary>
     /// <param name="ddsImageBytes">DDS file contents as a byte array.</param>
     /// <returns>Decoded Bitmap.</returns>
-    public static Bitmap DecodeDdsToBitmap(byte[] ddsImageBytes)
+    public static Bitmap DecodeDDSToBitmap(byte[] ddsImageBytes)
     {
         using (var ms = new MemoryStream(ddsImageBytes))
         {

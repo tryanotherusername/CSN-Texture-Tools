@@ -100,6 +100,9 @@ namespace HLTools
         private const int MaxPaletteColors = 256;
         private static readonly Encoding DefaultEncoding = Encoding.ASCII;
 
+        private const int DDSHeaderSize = 128;
+        private const int DXT5DataSize = 16;
+
         private BinaryReader binReader;
         private FileStream fs;
         private long[] indexesOfPixelPositions;
@@ -144,74 +147,103 @@ namespace HLTools
 
             SpriteHeader = spriteHeader;
 
-            //Palette length
-            ushort u = binReader.ReadUInt16();
-
-            //Prepare new palette for bitmap
-            ColorPalette pal;
-            using (var tmpBitmap = new Bitmap(1, 1, PixelFormat.Format8bppIndexed))
+            if (spriteHeader.Version == 3)
             {
-                pal = tmpBitmap.Palette;
-                byte[] palBytes = binReader.ReadBytes(u * 3);
-                for (int i = 0, j = 0; i < u; i++)
+                for (int i = 0; i < spriteHeader.NumFrames; i++)
                 {
-                    //Load (R,G,B) from file
-                    pal.Entries[i] = Color.FromArgb(palBytes[j], palBytes[j + 1], palBytes[j + 2]);
+                    var headerInfo = DDSHeaderParser.ParseHeader(binReader.ReadBytes(DDSHeaderSize));
 
-                    //Check for transparent color
-                    if (i == (u - 1)) //256th color is alpha
+                    int width = headerInfo.Width;
+                    int height = headerInfo.Height;
+
+                    int dataSize = ((width + 3) / 4) * ((height + 3) / 4) * DXT5DataSize;
+
+                    binReader.BaseStream.Seek(-DDSHeaderSize, SeekOrigin.Current);
+
+                    byte[] imageData = binReader.ReadBytes(DDSHeaderSize + dataSize);
+                    Frame frame = new Frame
                     {
-                        if (transparent && spriteHeader.TextFormat == SprTextFormat.SPR_ALPHTEST)
-                        {
-                            pal.Entries[i] = Color.FromArgb(0, pal.Entries[i]);
-                        }
-                    }
-
-                    j += 3;
+                        OriginX = 0,
+                        OriginY = 0,
+                        Image = DDSDecoderHelper.DecodeDDSToBitmap(imageData)
+                    };
+                    frames.Add(frame);
                 }
+
+
             }
-
-            indexesOfPixelPositions = new long[spriteHeader.NumFrames];
-            pixelsLengths = new uint[spriteHeader.NumFrames];
-
-
-            //Load frames
-            for (int i = 0; i < spriteHeader.NumFrames; i++)
+            else
             {
-                int frameGroup = binReader.ReadInt32();
-                int frameOriginX = binReader.ReadInt32();
-                int frameOriginY = binReader.ReadInt32();
-                int frameWidth = binReader.ReadInt32();
-                int frameHeight = binReader.ReadInt32();
+                //Palette length
+                ushort u = binReader.ReadUInt16();
 
-                Bitmap bmp = new Bitmap(frameWidth, frameHeight, PixelFormat.Format8bppIndexed)
+                //Prepare new palette for bitmap
+                ColorPalette pal;
+                using (var tmpBitmap = new Bitmap(1, 1, PixelFormat.Format8bppIndexed))
                 {
-                    Palette = pal
-                };
+                    pal = tmpBitmap.Palette;
+                    byte[] palBytes = binReader.ReadBytes(u * 3);
+                    for (int i = 0, j = 0; i < u; i++)
+                    {
+                        //Load (R,G,B) from file
+                        pal.Entries[i] = Color.FromArgb(palBytes[j], palBytes[j + 1], palBytes[j + 2]);
 
-                //Get pixelsize
-                uint pixelSize = (uint)(frameWidth * frameHeight);
+                        //Check for transparent color
+                        if (i == (u - 1)) //256th color is alpha
+                        {
+                            if (transparent && spriteHeader.TextFormat == SprTextFormat.SPR_ALPHTEST)
+                            {
+                                pal.Entries[i] = Color.FromArgb(0, pal.Entries[i]);
+                            }
+                        }
 
-                indexesOfPixelPositions[i] = binReader.BaseStream.Position;
-                pixelsLengths[i] = pixelSize;
+                        j += 3;
+                    }
+                }
 
-                //Load all pixels from file to array
-                byte[] pixels = binReader.ReadBytes((int)pixelSize);
+                indexesOfPixelPositions = new long[spriteHeader.NumFrames];
+                pixelsLengths = new uint[spriteHeader.NumFrames];
 
-                //Lock bitmap for pixel manipulation
-                BitmapData bmd = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.WriteOnly, 
-                    PixelFormat.Format8bppIndexed);
-                Marshal.Copy(pixels, 0, bmd.Scan0, pixels.Length);
-                bmp.UnlockBits(bmd);
 
-                //Insert new frame to frames list
-                Frame frame = new Frame
+                //Load frames
+                for (int i = 0; i < spriteHeader.NumFrames; i++)
                 {
-                    OriginX = frameOriginX,
-                    OriginY = frameOriginY,
-                    Image = bmp
-                };
-                frames.Add(frame);
+                    int frameGroup = binReader.ReadInt32();
+                    int frameOriginX = binReader.ReadInt32();
+                    int frameOriginY = binReader.ReadInt32();
+                    int frameWidth = binReader.ReadInt32();
+                    int frameHeight = binReader.ReadInt32();
+
+                    Bitmap bmp = new Bitmap(frameWidth, frameHeight, PixelFormat.Format8bppIndexed)
+                    {
+                        Palette = pal
+                    };
+
+                    //Get pixelsize
+                    uint pixelSize = (uint)(frameWidth * frameHeight);
+
+                    indexesOfPixelPositions[i] = binReader.BaseStream.Position;
+                    pixelsLengths[i] = pixelSize;
+
+                    //Load all pixels from file to array
+                    byte[] pixels = binReader.ReadBytes((int)pixelSize);
+
+                    //Lock bitmap for pixel manipulation
+                    BitmapData bmd = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.WriteOnly,
+                        PixelFormat.Format8bppIndexed);
+                    Marshal.Copy(pixels, 0, bmd.Scan0, pixels.Length);
+                    bmp.UnlockBits(bmd);
+
+                    //Insert new frame to frames list
+                    Frame frame = new Frame
+                    {
+                        OriginX = frameOriginX,
+                        OriginY = frameOriginY,
+                        Image = bmp
+                    };
+                    frames.Add(frame);
+                }
+
             }
 
             return frames.ToArray();
