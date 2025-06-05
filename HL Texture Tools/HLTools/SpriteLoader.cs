@@ -302,7 +302,11 @@ namespace HLTools
             }
 
             //Calc. bounding box
-            float f = (float)Math.Sqrt((maxW >> 1) * (maxW >> 1) + (maxH >> 1) * (maxH >> 1));
+            float f;
+            if (spriteVersion == 3)
+                f = (int)Math.Sqrt((maxW >> 1) * (maxW >> 1) + (maxH >> 1) * (maxH >> 1));
+            else
+                f = (float)Math.Sqrt((maxW >> 1) * (maxW >> 1) + (maxH >> 1) * (maxH >> 1));
 
             using (var bw = new BinaryWriter(new FileStream(outputPath, FileMode.Create), DefaultEncoding))
             {
@@ -310,16 +314,8 @@ namespace HLTools
                 bw.Write(SpriteHeaderId.ToCharArray());
                 bw.Write(spriteVersion);
                 bw.Write((uint)spriteType);
-                if (spriteVersion == 3)
-                {
-                    bw.Write((uint)SprTextFormat.SPR_NORMAL);
-                    bw.Write((float)Math.Floor(f));
-                }
-                else
-                {
-                    bw.Write((uint)textFormat);
-                    bw.Write(f);
-                }
+                bw.Write((uint)textFormat);
+                bw.Write(f);
                 bw.Write(maxW);
                 bw.Write(maxH);
                 bw.Write(images.Count);
@@ -338,10 +334,10 @@ namespace HLTools
                         int height = image.Height;
 
                         // Ensure 32bpp (for RGBA)
-                        if (image.ColorDepth != 32)
-                        {
-                            image.ConvertColorDepth(FREE_IMAGE_COLOR_DEPTH.FICD_32_BPP);
-                        }
+                        //if (image.ColorDepth != 32)
+                        //{
+                        //    image.ConvertColorDepth(FREE_IMAGE_COLOR_DEPTH.FICD_32_BPP);
+                        //}
 
                         image.RotateFlip(RotateFlipType.RotateNoneFlipY);
 
@@ -366,8 +362,12 @@ namespace HLTools
 
                         ddsFiles.Add(encoder.EncodeToDds(pixelBytes, image.Width, image.Height));
                     }
-                    foreach(var ddsFile in ddsFiles)
+                    const HeaderFlags flags = HeaderFlags.DDSD_CAPS | HeaderFlags.DDSD_HEIGHT | HeaderFlags.DDSD_WIDTH | HeaderFlags.DDSD_PIXELFORMAT | HeaderFlags.DDSD_LINEARSIZE | HeaderFlags.REQUIRED;
+                    foreach (var ddsFile in ddsFiles)
                     {
+                        ddsFile.Header.dwFlags = flags;
+                        ddsFile.Header.dwPitchOrLinearSize = ((ddsFile.Header.dwWidth + 3) / 4) * ((ddsFile.Header.dwHeight + 3) / 4) * DXT5DataSize;
+
                         MemoryStream memoryStream = new MemoryStream();
                         ddsFile.Write(memoryStream);
                         bw.Write(memoryStream.ToArray());
