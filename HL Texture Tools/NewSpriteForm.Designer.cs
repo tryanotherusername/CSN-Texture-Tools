@@ -74,6 +74,7 @@
             this.addImagesFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.saveSpriteFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.colorPicker = new System.Windows.Forms.ColorDialog();
+            this.checkBosSprVersion = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -269,6 +270,7 @@
             this.tableLayoutPanel4.Controls.Add(this.label7, 0, 3);
             this.tableLayoutPanel4.Controls.Add(this.label6, 0, 1);
             this.tableLayoutPanel4.Controls.Add(this.radioOriented, 0, 2);
+            this.tableLayoutPanel4.Controls.Add(this.checkBosSprVersion, 0, 7);
             this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 18);
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
@@ -292,7 +294,7 @@
             this.radioParallel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.radioParallel.Location = new System.Drawing.Point(19, 19);
             this.radioParallel.Name = "radioParallel";
-            this.radioParallel.Size = new System.Drawing.Size(80, 20);
+            this.radioParallel.Size = new System.Drawing.Size(79, 20);
             this.radioParallel.TabIndex = 2;
             this.radioParallel.TabStop = true;
             this.radioParallel.Text = "Parallel";
@@ -305,7 +307,7 @@
             this.radioFacingUpright.Location = new System.Drawing.Point(19, 175);
             this.radioFacingUpright.Margin = new System.Windows.Forms.Padding(3, 3, 3, 8);
             this.radioFacingUpright.Name = "radioFacingUpright";
-            this.radioFacingUpright.Size = new System.Drawing.Size(113, 20);
+            this.radioFacingUpright.Size = new System.Drawing.Size(112, 20);
             this.radioFacingUpright.TabIndex = 1;
             this.radioFacingUpright.TabStop = true;
             this.radioFacingUpright.Text = "Facing Upright";
@@ -318,7 +320,7 @@
             this.radioParallelOriented.Location = new System.Drawing.Point(19, 113);
             this.radioParallelOriented.Margin = new System.Windows.Forms.Padding(3, 3, 3, 8);
             this.radioParallelOriented.Name = "radioParallelOriented";
-            this.radioParallelOriented.Size = new System.Drawing.Size(126, 20);
+            this.radioParallelOriented.Size = new System.Drawing.Size(125, 20);
             this.radioParallelOriented.TabIndex = 4;
             this.radioParallelOriented.TabStop = true;
             this.radioParallelOriented.Text = "Parallel Oriented";
@@ -331,7 +333,7 @@
             this.radioParallelUpright.Location = new System.Drawing.Point(19, 144);
             this.radioParallelUpright.Margin = new System.Windows.Forms.Padding(3, 3, 3, 8);
             this.radioParallelUpright.Name = "radioParallelUpright";
-            this.radioParallelUpright.Size = new System.Drawing.Size(118, 20);
+            this.radioParallelUpright.Size = new System.Drawing.Size(117, 20);
             this.radioParallelUpright.TabIndex = 0;
             this.radioParallelUpright.TabStop = true;
             this.radioParallelUpright.Text = "Parallel Upright";
@@ -367,7 +369,7 @@
             this.radioOriented.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.radioOriented.Location = new System.Drawing.Point(19, 66);
             this.radioOriented.Name = "radioOriented";
-            this.radioOriented.Size = new System.Drawing.Size(85, 20);
+            this.radioOriented.Size = new System.Drawing.Size(84, 20);
             this.radioOriented.TabIndex = 3;
             this.radioOriented.TabStop = true;
             this.radioOriented.Text = "Oriented";
@@ -414,7 +416,7 @@
             this.tableLayoutPanel2.SetColumnSpan(this.quantizePalette, 2);
             this.quantizePalette.Location = new System.Drawing.Point(19, 19);
             this.quantizePalette.Name = "quantizePalette";
-            this.quantizePalette.Size = new System.Drawing.Size(209, 20);
+            this.quantizePalette.Size = new System.Drawing.Size(208, 20);
             this.quantizePalette.TabIndex = 12;
             this.quantizePalette.Text = "Quantize palette with all frames";
             this.quantizePalette.UseVisualStyleBackColor = true;
@@ -426,7 +428,7 @@
             this.label1.Location = new System.Drawing.Point(19, 46);
             this.label1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(185, 16);
+            this.label1.Size = new System.Drawing.Size(184, 16);
             this.label1.TabIndex = 5;
             this.label1.Text = "Use palette from image index:";
             // 
@@ -436,7 +438,7 @@
             this.panelPickTransparentColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelPickTransparentColor.Cursor = System.Windows.Forms.Cursors.Hand;
             this.panelPickTransparentColor.ForeColor = System.Drawing.Color.White;
-            this.panelPickTransparentColor.Location = new System.Drawing.Point(220, 73);
+            this.panelPickTransparentColor.Location = new System.Drawing.Point(219, 73);
             this.panelPickTransparentColor.Name = "panelPickTransparentColor";
             this.panelPickTransparentColor.Size = new System.Drawing.Size(33, 34);
             this.panelPickTransparentColor.TabIndex = 9;
@@ -445,13 +447,25 @@
             // inputPaletteIndex
             // 
             this.inputPaletteIndex.Enabled = false;
-            this.inputPaletteIndex.Location = new System.Drawing.Point(220, 45);
-            this.inputPaletteIndex.Maximum = new decimal(new int[] { 9999, 0, 0, 0 });
-            this.inputPaletteIndex.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            this.inputPaletteIndex.Location = new System.Drawing.Point(219, 45);
+            this.inputPaletteIndex.Maximum = new decimal(new int[] {
+            9999,
+            0,
+            0,
+            0});
+            this.inputPaletteIndex.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             this.inputPaletteIndex.Name = "inputPaletteIndex";
             this.inputPaletteIndex.Size = new System.Drawing.Size(90, 22);
             this.inputPaletteIndex.TabIndex = 2;
-            this.inputPaletteIndex.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            this.inputPaletteIndex.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             // 
             // label8
             // 
@@ -459,7 +473,7 @@
             this.label8.Location = new System.Drawing.Point(19, 82);
             this.label8.Margin = new System.Windows.Forms.Padding(3, 12, 3, 0);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(195, 16);
+            this.label8.Size = new System.Drawing.Size(194, 16);
             this.label8.TabIndex = 10;
             this.label8.Text = "Transparent color replacement:";
             // 
@@ -509,7 +523,7 @@
             this.radioNormalTexture.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.radioNormalTexture.Location = new System.Drawing.Point(19, 19);
             this.radioNormalTexture.Name = "radioNormalTexture";
-            this.radioNormalTexture.Size = new System.Drawing.Size(76, 20);
+            this.radioNormalTexture.Size = new System.Drawing.Size(75, 20);
             this.radioNormalTexture.TabIndex = 0;
             this.radioNormalTexture.TabStop = true;
             this.radioNormalTexture.Text = "Normal";
@@ -543,7 +557,7 @@
             this.radioAlphaTestTexture.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.radioAlphaTestTexture.Location = new System.Drawing.Point(19, 160);
             this.radioAlphaTestTexture.Name = "radioAlphaTestTexture";
-            this.radioAlphaTestTexture.Size = new System.Drawing.Size(82, 20);
+            this.radioAlphaTestTexture.Size = new System.Drawing.Size(81, 20);
             this.radioAlphaTestTexture.TabIndex = 0;
             this.radioAlphaTestTexture.Text = "Alphatest";
             this.radioAlphaTestTexture.UseVisualStyleBackColor = true;
@@ -575,7 +589,7 @@
             this.radioAdditiveTexture.AutoSize = true;
             this.radioAdditiveTexture.Location = new System.Drawing.Point(19, 66);
             this.radioAdditiveTexture.Name = "radioAdditiveTexture";
-            this.radioAdditiveTexture.Size = new System.Drawing.Size(75, 20);
+            this.radioAdditiveTexture.Size = new System.Drawing.Size(74, 20);
             this.radioAdditiveTexture.TabIndex = 0;
             this.radioAdditiveTexture.Text = "Additive";
             this.radioAdditiveTexture.UseVisualStyleBackColor = true;
@@ -585,7 +599,7 @@
             this.radioIndexAlphaTexture.AutoSize = true;
             this.radioIndexAlphaTexture.Location = new System.Drawing.Point(19, 113);
             this.radioIndexAlphaTexture.Name = "radioIndexAlphaTexture";
-            this.radioIndexAlphaTexture.Size = new System.Drawing.Size(92, 20);
+            this.radioIndexAlphaTexture.Size = new System.Drawing.Size(91, 20);
             this.radioIndexAlphaTexture.TabIndex = 0;
             this.radioIndexAlphaTexture.Text = "Indexalpha";
             this.radioIndexAlphaTexture.UseVisualStyleBackColor = true;
@@ -606,7 +620,9 @@
             // 
             // helpBrowser
             // 
-            this.helpBrowser.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.helpBrowser.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.helpBrowser.IsWebBrowserContextMenuEnabled = false;
             this.helpBrowser.Location = new System.Drawing.Point(3, 0);
             this.helpBrowser.MinimumSize = new System.Drawing.Size(20, 20);
@@ -621,14 +637,15 @@
             this.progLbl.AutoSize = true;
             this.progLbl.Location = new System.Drawing.Point(8, 415);
             this.progLbl.Name = "progLbl";
-            this.progLbl.Size = new System.Drawing.Size(126, 16);
+            this.progLbl.Size = new System.Drawing.Size(125, 16);
             this.progLbl.TabIndex = 9;
             this.progLbl.Text = "Creating sprite file ...";
             this.progLbl.Visible = false;
             // 
             // progBar
             // 
-            this.progBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.progBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.progBar.Location = new System.Drawing.Point(8, 434);
             this.progBar.Name = "progBar";
             this.progBar.Size = new System.Drawing.Size(700, 23);
@@ -638,7 +655,8 @@
             // 
             // buttonSaveSprite
             // 
-            this.buttonSaveSprite.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonSaveSprite.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonSaveSprite.Enabled = false;
             this.buttonSaveSprite.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.buttonSaveSprite.Location = new System.Drawing.Point(8, 463);
@@ -651,12 +669,25 @@
             // 
             // addImagesFileDialog
             // 
-            this.addImagesFileDialog.Filter = "Image files|*.bmp;*.png;*.jpg;*.gif;*.tiff|Bitmap files (*.bmp)|*.bmp|PNG files (" + "*.png)|*.png|JPEG files (*.jpg)|*.jpg|Gif files (*.gif)|*.gif|Tiff files (*.tiff" + ")|*.tiff";
+            this.addImagesFileDialog.Filter = "Image files|*.bmp;*.png;*.jpg;*.gif;*.tiff|Bitmap files (*.bmp)|*.bmp|PNG files (" +
+    "*.png)|*.png|JPEG files (*.jpg)|*.jpg|Gif files (*.gif)|*.gif|Tiff files (*.tiff" +
+    ")|*.tiff";
             this.addImagesFileDialog.Multiselect = true;
             // 
             // saveSpriteFileDialog
             // 
             this.saveSpriteFileDialog.Filter = "HL SPR Files (*.spr)|*.spr";
+            // 
+            // checkBosSprVersion
+            // 
+            this.checkBosSprVersion.AutoSize = true;
+            this.checkBosSprVersion.CheckAlign = System.Drawing.ContentAlignment.TopLeft;
+            this.checkBosSprVersion.Location = new System.Drawing.Point(19, 206);
+            this.checkBosSprVersion.Name = "checkBosSprVersion";
+            this.checkBosSprVersion.Size = new System.Drawing.Size(128, 20);
+            this.checkBosSprVersion.TabIndex = 7;
+            this.checkBosSprVersion.Text = "Output As Sprite3";
+            this.checkBosSprVersion.UseVisualStyleBackColor = true;
             // 
             // NewSpriteForm
             // 
@@ -689,6 +720,7 @@
             this.tabPage3.ResumeLayout(false);
             this.tabPage3.PerformLayout();
             this.ResumeLayout(false);
+
         }
 
         #endregion
@@ -738,5 +770,6 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel4;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel5;
         private System.Windows.Forms.CheckBox quantizePalette;
+        private System.Windows.Forms.CheckBox checkBosSprVersion;
     }
 }

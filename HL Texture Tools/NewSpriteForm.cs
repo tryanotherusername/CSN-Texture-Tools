@@ -129,6 +129,11 @@ namespace HLTextureTools
             return newTextFormat;
         }
 
+        private bool GetUseSprite3()
+        {
+            return checkBosSprVersion.Checked;
+        }
+
         private void buttonSaveSprite_Click(object sender, EventArgs e)
         {
             if (saveSpriteFileDialog.ShowDialog() == DialogResult.OK)
@@ -142,6 +147,7 @@ namespace HLTextureTools
                 {
                     string[] filenames = GetInputFilenames();
                     string savePath = saveSpriteFileDialog.FileName;
+                    int spriteVersion = GetUseSprite3() ? 3 : 2;
                     SprType spriteType = GetSelectedSpriteType();
                     SprTextFormat spriteFormat = GetSelectedSpriteFormat();
                     int paletteIndex = (int)inputPaletteIndex.Value - 1;
@@ -150,7 +156,7 @@ namespace HLTextureTools
 
                     Thread thCreator = new Thread((o) =>
                     {
-                        SpriteLoader.CreateSpriteFile(savePath, filenames, spriteType, spriteFormat, paletteIndex, transparentColorReplacement, quantizePaletteChecked);
+                        SpriteLoader.CreateSpriteFile(savePath, filenames, spriteVersion, spriteType, spriteFormat, paletteIndex, transparentColorReplacement, quantizePaletteChecked);
                     });
                     thCreator.Start();
 

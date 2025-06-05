@@ -24,7 +24,10 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using BCnEncoder.Encoder;
+using BCnEncoder.Shared;
 using FreeImageAPI;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace HLTools
 {
@@ -259,9 +262,10 @@ namespace HLTools
         /// <param name="palIndex">Which palette use from files</param>
         /// <param name="alphaReplacementColor">Which color to use as replacement for alpha</param>
         /// <param name="quantizePalette">Use quantized palette of all frames.</param>
-        public static void CreateSpriteFile(string outputPath, string[] files, SprType spriteType,
+        public static void CreateSpriteFile(string outputPath, string[] files, int spriteVersion, SprType spriteType,
             SprTextFormat textFormat, int palIndex, Color alphaReplacementColor, bool quantizePalette)
         {
+            
             var images = files.Select(file => new FreeImageBitmap(file)).ToList();
 
             //Retrieve maximum width, height
@@ -277,7 +281,7 @@ namespace HLTools
                     maxH = image.Height;
                 }
 
-                if (image.IsTransparent)
+                if (image.IsTransparent && spriteVersion != 3)
                 {
                     if (image.TransparentIndex != -1)
                     {
@@ -291,7 +295,7 @@ namespace HLTools
                 }
 
                 // Convert to 8BPP image if needed
-                if (!image.HasPalette || image.Palette.Length != MaxPaletteColors)
+                if (spriteVersion != 3 && (!image.HasPalette || image.Palette.Length != MaxPaletteColors))
                 {
                     image.ConvertColorDepth(FREE_IMAGE_COLOR_DEPTH.FICD_08_BPP);
                 }
@@ -304,97 +308,156 @@ namespace HLTools
             {
                 //Write header first
                 bw.Write(SpriteHeaderId.ToCharArray());
-                bw.Write(2);
+                bw.Write(spriteVersion);
                 bw.Write((uint)spriteType);
-                bw.Write((uint)textFormat);
-                bw.Write(f);
+                if (spriteVersion == 3)
+                {
+                    bw.Write((uint)SprTextFormat.SPR_NORMAL);
+                    bw.Write((float)Math.Floor(f));
+                }
+                else
+                {
+                    bw.Write((uint)textFormat);
+                    bw.Write(f);
+                }
                 bw.Write(maxW);
                 bw.Write(maxH);
                 bw.Write(images.Count);
                 bw.Write(0.0f); //Always 0 ?
                 bw.Write(1); //Synchronization type
-                bw.Write((ushort)MaxPaletteColors); // Color palette (always 256)
 
-                Palette palette;
-
-                if (quantizePalette)
+                if (spriteVersion == 3)
                 {
-                    // Create big image with all frames
-                    // (could be optimized without creating a separate image)
+                    var encoder = new BcEncoder(CompressionFormat.BC3);
 
-                    int width = images.Sum(img => img.Width);
-                    int height = images.Max(img => img.Height);
+                    List<BCnEncoder.Shared.DdsFile> ddsFiles = new List<BCnEncoder.Shared.DdsFile>();
 
-                    using (var canvas = new Bitmap(width, height))
-                    using (var graphics = Graphics.FromImage(canvas))
+                    foreach (var image in images)
                     {
-                        int totalImageWidth = 0;
+                        int width = image.Width;
+                        int height = image.Height;
 
-                        foreach (var image in images)
+                        // Ensure 32bpp (for RGBA)
+                        if (image.ColorDepth != 32)
                         {
-                            graphics.DrawImage(image.ToBitmap(), totalImageWidth, 0);
-                            totalImageWidth += image.Width;
+                            image.ConvertColorDepth(FREE_IMAGE_COLOR_DEPTH.FICD_32_BPP);
                         }
 
-                        using (var allImages = new FreeImageBitmap(canvas))
+                        image.RotateFlip(RotateFlipType.RotateNoneFlipY);
+
+                        int byteCount = width * height * 4;
+
+                        // Allocate managed array
+                        byte[] pixelBytes = new byte[byteCount];
+
+                        // Copy pixel data from unmanaged memory to managed array
+                        Marshal.Copy(image.Bits, pixelBytes, 0, byteCount);
+
+                        for (int i = 0; i < pixelBytes.Length; i += 4)
                         {
-                            allImages.ConvertColorDepth(FREE_IMAGE_COLOR_DEPTH.FICD_08_BPP);
-                            palette = new Palette(allImages.Palette.AsArray);
+                            byte r = pixelBytes[i];
+                            byte g = pixelBytes[i + 1];
+                            byte b = pixelBytes[i + 2];
+                            pixelBytes[i] = b;
+                            pixelBytes[i + 1] = g;
+                            pixelBytes[i + 2] = r;
                         }
+
+
+                        ddsFiles.Add(encoder.EncodeToDds(pixelBytes, image.Width, image.Height));
+                    }
+                    foreach(var ddsFile in ddsFiles)
+                    {
+                        MemoryStream memoryStream = new MemoryStream();
+                        ddsFile.Write(memoryStream);
+                        bw.Write(memoryStream.ToArray());
                     }
                 }
                 else
                 {
-                    palIndex = Math.Max(0, Math.Min(palIndex, images.Count - 1));
-                    palette = images[palIndex].Palette;
-                }
+                    bw.Write((ushort)MaxPaletteColors); // Color palette (always 256)
 
-                // Swap last color for a transparent one
-                if (quantizePalette && textFormat == SprTextFormat.SPR_ALPHTEST)
-                {
-                    var transparentIndex = palette.AsArray.ToList().FindIndex(rgb =>
-                        rgb.rgbRed == alphaReplacementColor.R && rgb.rgbGreen == alphaReplacementColor.G &&
-                        rgb.rgbBlue == alphaReplacementColor.B);
+                    Palette palette;
 
-                    if (transparentIndex != -1)
-                    {
-                        var tempColor = palette[MaxPaletteColors - 1];
-                        palette[MaxPaletteColors - 1] = new RGBQUAD(alphaReplacementColor);
-                        palette[transparentIndex] = tempColor;                        
-                    }
-                }
-
-                for (int i = 0; i < MaxPaletteColors; i++)
-                {
-                    bw.Write(palette[i].rgbRed);
-                    bw.Write(palette[i].rgbGreen);
-                    bw.Write(palette[i].rgbBlue);
-                }
-
-                //Write images
-                foreach (var image in images)
-                {
-                    bw.Write(0); //group
-                    bw.Write(-(image.Width / 2)); //origin x
-                    bw.Write(image.Height / 2); //origin y
-                    bw.Write(image.Width); //w
-                    bw.Write(image.Height); //h
-
-                    image.RotateFlip(RotateFlipType.RotateNoneFlipX);
-
-                    byte[] imagePixels;
                     if (quantizePalette)
                     {
-                        imagePixels = RemapImageToPalette(image, palette);
+                        // Create big image with all frames
+                        // (could be optimized without creating a separate image)
+
+                        int width = images.Sum(img => img.Width);
+                        int height = images.Max(img => img.Height);
+
+                        using (var canvas = new Bitmap(width, height))
+                        using (var graphics = Graphics.FromImage(canvas))
+                        {
+                            int totalImageWidth = 0;
+
+                            foreach (var image in images)
+                            {
+                                graphics.DrawImage(image.ToBitmap(), totalImageWidth, 0);
+                                totalImageWidth += image.Width;
+                            }
+
+                            using (var allImages = new FreeImageBitmap(canvas))
+                            {
+                                allImages.ConvertColorDepth(FREE_IMAGE_COLOR_DEPTH.FICD_08_BPP);
+                                palette = new Palette(allImages.Palette.AsArray);
+                            }
+                        }
                     }
                     else
                     {
-                        imagePixels = new byte[image.Width * image.Height];
-                        Marshal.Copy(image.GetScanlinePointer(0), imagePixels, 0, imagePixels.Length);
+                        palIndex = Math.Max(0, Math.Min(palIndex, images.Count - 1));
+                        palette = images[palIndex].Palette;
                     }
 
-                    Array.Reverse(imagePixels);
-                    bw.Write(imagePixels);
+                    // Swap last color for a transparent one
+                    if (quantizePalette && textFormat == SprTextFormat.SPR_ALPHTEST)
+                    {
+                        var transparentIndex = palette.AsArray.ToList().FindIndex(rgb =>
+                            rgb.rgbRed == alphaReplacementColor.R && rgb.rgbGreen == alphaReplacementColor.G &&
+                            rgb.rgbBlue == alphaReplacementColor.B);
+
+                        if (transparentIndex != -1)
+                        {
+                            var tempColor = palette[MaxPaletteColors - 1];
+                            palette[MaxPaletteColors - 1] = new RGBQUAD(alphaReplacementColor);
+                            palette[transparentIndex] = tempColor;
+                        }
+                    }
+
+                    for (int i = 0; i < MaxPaletteColors; i++)
+                    {
+                        bw.Write(palette[i].rgbRed);
+                        bw.Write(palette[i].rgbGreen);
+                        bw.Write(palette[i].rgbBlue);
+                    }
+
+                    //Write images
+                    foreach (var image in images)
+                    {
+                        bw.Write(0); //group
+                        bw.Write(-(image.Width / 2)); //origin x
+                        bw.Write(image.Height / 2); //origin y
+                        bw.Write(image.Width); //w
+                        bw.Write(image.Height); //h
+
+                        image.RotateFlip(RotateFlipType.RotateNoneFlipX);
+
+                        byte[] imagePixels;
+                        if (quantizePalette)
+                        {
+                            imagePixels = RemapImageToPalette(image, palette);
+                        }
+                        else
+                        {
+                            imagePixels = new byte[image.Width * image.Height];
+                            Marshal.Copy(image.GetScanlinePointer(0), imagePixels, 0, imagePixels.Length);
+                        }
+
+                        Array.Reverse(imagePixels);
+                        bw.Write(imagePixels);
+                    }
                 }
             }
 
